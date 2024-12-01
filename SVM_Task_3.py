@@ -6,7 +6,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from PIL import Image
 
-# Function to load 10 images and infer labels from filenames
+# Function to load n images and infer labels from filenames
 def load_first_n_images_with_filenames(folder, n=25000, image_size=(64, 64)):
     images = []
     labels = []
@@ -51,7 +51,7 @@ X_train, X_test, y_train, y_test, filenames_train, filenames_test = train_test_s
 r)
 
 # Train an SVM model
-svm_model = SVC(kernel='linear')  # You can try other kernels like 'rbf' for experimentation
+svm_model = SVC(kernel='linear')
 svm_model.fit(X_train, y_train)
 
 # Make predictions
