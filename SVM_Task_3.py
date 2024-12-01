@@ -6,14 +6,15 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from PIL import Image
 
-# Function to load images and infer labels from filenames
-def load_images_from_folder(folder, image_size=(64, 64)):
+# Function to load 10 images and infer labels from filenames
+def load_first_n_images_with_filenames(folder, n=25000, image_size=(64, 64)):
     images = []
     labels = []
-    
+    filenames = []
+    count = 0
+
     for filename in os.listdir(folder):
         if filename.endswith('.jpg'):
-            # Derive the label from the filename
             if 'cat' in filename:
                 label = 0  # Label 0 for cats
             elif 'dog' in filename:
@@ -28,23 +29,26 @@ def load_images_from_folder(folder, image_size=(64, 64)):
                 img_array = np.array(img).flatten()  # Flatten the image
                 images.append(img_array)
                 labels.append(label)
+                filenames.append(filename)
+                count += 1
+                if count >= n:
+                    break  # Stop after loading the first n images
             except Exception as e:
                 print(f"Error loading image {filename}: {e}")
     
-    return images, labels
+    return images, labels, filenames
 
-# Path to the train folder
-train_folder = '/home/abhi/Documents/intern_ml/PRODIGY_ML_03/Data_set/train'
 
-# Load data and labels
-images, labels = load_images_from_folder(train_folder)
+train_folder = 'Data_set/train'
+images, labels, filenames = load_first_n_images_with_filenames(train_folder, n=25000)
 
 # Convert lists to arrays
 X = np.array(images)
 y = np.array(labels)
 
 # Split data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, filenames_train, filenames_test = train_test_split(X, y, filenames, test_size=0.2, random_state=42
+r)
 
 # Train an SVM model
 svm_model = SVC(kernel='linear')  # You can try other kernels like 'rbf' for experimentation
@@ -53,12 +57,22 @@ svm_model.fit(X_train, y_train)
 # Make predictions
 y_pred = svm_model.predict(X_test)
 
-# Evaluate and print accuracy
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Model accuracy: {accuracy:.2f}")
+# Map numeric predictions to string labels
+label_map = {0: 'cat', 1: 'dog'}
+y_pred_labels = [label_map[pred] for pred in y_pred]
+y_test_labels = [label_map[actual] for actual in y_test]
 
-# Create a CSV file with predictions
-results_df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
-results_df.to_csv('classification_results.csv', index=False)
+# Create a DataFrame with filenames, actual labels, and predicted labels
+results_df = pd.DataFrame({
+    'Image ID': filenames_test,
+    'Actual Label': y_test_labels,
+    'Predicted Label': y_pred_labels
+})
 
-print("Predictions saved to classification_results.csv")
+# Save results to a CSV file
+results_df.to_csv('Predictions.csv', index=False)
+
+accuracy=accuracy_score(y_test,y_pred)
+print(f"Accuracy: {accuracy:.2f}")
+print("Predictions saved to Predictions.csv")
+
